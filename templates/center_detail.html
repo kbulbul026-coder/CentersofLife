@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ center.name }} Center Perceptions</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #6c757d; text-decoration: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; font-size: 1.1em; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .relationship-name { font-weight: bold; color: #495057; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('index') }}" class="back-link">&leftarrow; Back to All Centers</a>
+
+        {% if center.name == "Principles" %}
+            <h1>🌟 {{ center.name }} Center Perceptions</h1>
+            <p>This is the stable center, where security and guidance come from internal, unchanging values.</p>
+        {% else %}
+            <h1>⚠️ {{ center.name }} Center Perceptions</h1>
+            <p>This is an unstable center, where your perceptions and feelings are dictated by external factors.</p>
+        {% endif %}
+
+        <h2>How everything is viewed through the lens of the **{{ center.name }} Center**:</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Relationship/Concept</th>
+                    <th>Perception (Value Statement)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in center.children %}
+                <tr>
+                    <td class="relationship-name">{{ role.name }}</td>
+                    <td>{{ role.value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

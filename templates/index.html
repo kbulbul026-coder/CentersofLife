@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Covey's Centers of Life</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 10px; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; font-size: 1.2em; padding: 8px 15px; background: #e9ecef; border-radius: 5px; display: inline-block; width: 100%; box-sizing: border-box; }
+        a:hover { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Select a Primary Center to Explore</h1>
+        <p>Your center is the source of your security, guidance, wisdom, and power, and it dictates how you perceive the world and others.</p>
+        
+        <ul>
+            {% for center in centers %}
+            <li>
+                <a href="{{ url_for('center_detail', center_name=center.name) }}">
+                    {{ center.name }} Center
+                    {% if center.name == 'Principles' %}
+                        🌟 (The Stable Center)
+                    {% endif %}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

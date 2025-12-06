@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Centers of Perception Mind Map</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* Essential styles for D3 visualization */
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #f0f0f5; }
+        .node circle { fill: #fff; stroke: steelblue; stroke-width: 3px; cursor: pointer; }
+        .node text { font: 12px sans-serif; fill: #555; }
+        .link { fill: none; stroke: #ccc; stroke-width: 2px; }
+        
+        /* Tooltip style */
+        .tooltip {
+            position: absolute;
+            text-align: left;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            max-width: 300px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <svg id="mindmap-container"></svg>
+    <div class="tooltip"></div>
+
+    <script>
+        // --- 1. SETUP DIMENSIONS (Responsive) ---
+        // Use the browser window size for width and height
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // Set margins to allow space for labels
+        const margin = {top: 20, right: 10, bottom: 20, left: 100};
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+
+        const svg = d3.select("#mindmap-container")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            // Apply margins by translating the inner group
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        // --- 2. D3 TREE LAYOUT ---
+        const tree = d3.tree()
+            // Size: [Y-dimension (height), X-dimension (width)] for a top-to-bottom tree
+            // We use [innerHeight, innerWidth] for a horizontal (left-to-right) tree
+            .size([innerHeight, innerWidth]);
+
+        // Fetch the JSON data from the Flask API endpoint
+        d3.json("{{ url_for('api_data') }}").then(data => {
+            const root = d3.hierarchy(data);
+
+            // Compute the layout (nodes and links)
+            tree(root);
+
+            // --- 3. LINK PATH GENERATOR ---
+            // Creates the smooth diagonal lines for a horizontal tree
+            const linkGenerator = d3.linkHorizontal()
+                .x(d => d.y) // X position is the hierarchy depth (d.y)
+                .y(d => d.x); // Y position is the placement within the height (d.x)
+
+            // --- LINKS ---
+            svg.selectAll(".link")
+                .data(root.links())
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("d", linkGenerator);
+
+            // --- NODES ---
+            const node = svg.selectAll(".node")
+                .data(root.descendants())
+                .enter().append("g")
+                .attr("class", d => "node" + (d.children ? " node--internal" : " node--leaf"))
+                // Translate nodes based on X (d.y) and Y (d.x) coordinates
+                .attr("transform", d => `translate(${d.y}, ${d.x})`);
+
+            node.append("circle")
+                .attr("r", 5)
+                .attr("stroke", d => d.depth === 1 ? d.data.color : "steelblue"); 
+
+            // --- TEXT ---
+            node.append("text")
+                .attr("dy", "0.31em")
+                // Position text 8px away from the circle
+                .attr("x", d => d.children ? -8 : 8) 
+                // Anchor text to the end for internal nodes (left side) or start for leaf nodes (right side)
+                .style("text-anchor", d => d.children ? "end" : "start")
+                .text(d => d.data.name);
+
+            // --- TOOLTIP LOGIC ---
+            const tooltip = d3.select(".tooltip");
+
+            node.on("mouseover", function(event, d) {
+                if (d.data.value) {
+                    // Highlight the circle on hover
+                    d3.select(this).select("circle").attr("r", 8).attr("stroke-width", 5).attr("stroke", d.data.color || "green"); 
+
+                    // Show tooltip
+                    tooltip
+                        .style("opacity", 1)
+                        .html(`<strong>${d.data.name}:</strong> ${d.data.value}`)
+                        .style("left", (event.pageX + 15) + "px")
+                        .style("top", (event.pageY - 10) + "px");
+                }
+            })
+            .on("mouseout", function() {
+                // Restore circle size and stroke on mouseout
+                d3.select(this).select("circle").attr("r", 5).attr("stroke-width", 3).attr("stroke", d => d.depth === 1 ? d.data.color : "steelblue");
+
+                // Hide tooltip
+                tooltip.style("opacity", 0);
+            });
+        });
+    </script>
+</body>
+</html>
